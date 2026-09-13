@@ -1,0 +1,463 @@
+-- ========================================================
+-- 🔥 PEERAWAT HUB — ENGLISH VERSION
+-- 📋 Features: 150+ Functions | Draggable Fire Button | Toggle Window
+-- 🎨 Themes: 🔴 Red | ⚫ Black | ⚪ White | 🔵 Teal
+-- ========================================================
+
+local UIS = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LP = Players.LocalPlayer
+
+-- Cleanup old UI
+if game.CoreGui:FindFirstChild("PEERAWAT_HUB") then game.CoreGui.PEERAWAT_HUB:Destroy() end
+
+-- Create Main GUI
+local Gui = Instance.new("ScreenGui")
+Gui.Name = "PEERAWAT_HUB"
+Gui.ResetOnSpawn = false
+Gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+local success, _ = pcall(function() Gui.Parent = game.CoreGui end)
+if not success then Gui.Parent = LP:WaitForChild("PlayerGui") end
+
+-- ====================== THEME COLORS ======================
+local Themes = {
+    Red = {
+        BG = Color3.fromRGB(40, 10, 15),
+        Panel = Color3.fromRGB(70, 20, 25),
+        Accent = Color3.fromRGB(220, 40, 70),
+        Text = Color3.fromRGB(255, 220, 225),
+        Btn = Color3.fromRGB(220, 40, 70)
+    },
+    Black = {
+        BG = Color3.fromRGB(20, 20, 22),
+        Panel = Color3.fromRGB(35, 35, 38),
+        Accent = Color3.fromRGB(90, 90, 95),
+        Text = Color3.fromRGB(230, 230, 230),
+        Btn = Color3.fromRGB(45, 45, 48)
+    },
+    White = {
+        BG = Color3.fromRGB(240, 240, 242),
+        Panel = Color3.fromRGB(255, 255, 255),
+        Accent = Color3.fromRGB(90, 90, 100),
+        Text = Color3.fromRGB(40, 40, 45),
+        Btn = Color3.fromRGB(230, 230, 232)
+    },
+    Teal = {
+        BG = Color3.fromRGB(10, 30, 30),
+        Panel = Color3.fromRGB(20, 50, 50),
+        Accent = Color3.fromRGB(20, 180, 160),
+        Text = Color3.fromRGB(210, 245, 240),
+        Btn = Color3.fromRGB(20, 180, 160)
+    }
+}
+local CurrentTheme = "Red"
+
+-- ====================== DRAGGABLE FIRE BUTTON ======================
+local ToggleBtn = Instance.new("TextButton")
+ToggleBtn.Size = UDim2.new(0, 60, 0, 60)
+ToggleBtn.Position = UDim2.new(0.01, 0, 0.6, 0)
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(220, 40, 0)
+ToggleBtn.Text = "🔥"
+ToggleBtn.TextSize = 32
+ToggleBtn.Font = Enum.Font.GothamBold
+ToggleBtn.TextColor3 = Color3.fromRGB(255, 200, 50)
+ToggleBtn.AutoLocalize = false
+ToggleBtn.Parent = Gui
+Instance.new("UICorner", ToggleBtn).CornerRadius = UDim.new(1, 0)
+local ToggleStroke = Instance.new("UIStroke", ToggleBtn)
+ToggleStroke.Color = Color3.fromRGB(255, 120, 0)
+ToggleStroke.Thickness = 3
+
+-- Drag Fire Button
+local btnDragging, btnDragStart, btnPosStart
+ToggleBtn.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        btnDragging = true
+        btnDragStart = input.Position
+        btnPosStart = ToggleBtn.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then btnDragging = false end
+        end)
+    end
+end)
+UIS.InputChanged:Connect(function(input)
+    if btnDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        local delta = input.Position - btnDragStart
+        ToggleBtn.Position = UDim2.new(btnPosStart.X.Scale, btnPosStart.X.Offset + delta.X, btnPosStart.Y.Scale, btnPosStart.Y.Offset + delta.Y)
+    end
+end)
+
+-- ====================== MAIN WINDOW ======================
+local Main = Instance.new("Frame")
+Main.Size = UDim2.new(0.88, 0, 0.75, 0)
+Main.Position = UDim2.new(0.06, 0, 0.12, 0)
+Main.BackgroundColor3 = Themes[CurrentTheme].BG
+Main.ClipsDescendants = true
+Main.Active = true
+Main.Visible = false
+Main.Parent = Gui
+Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 16)
+
+local MainStroke = Instance.new("UIStroke", Main)
+MainStroke.Color = Themes[CurrentTheme].Accent
+MainStroke.Thickness = 3
+
+-- Title Bar
+local TopBar = Instance.new("Frame")
+TopBar.Size = UDim2.new(1, 0, 0, 55)
+TopBar.BackgroundColor3 = Themes[CurrentTheme].Panel
+TopBar.Parent = Main
+Instance.new("UICorner", TopBar).CornerRadius = UDim.new(0, 16)
+
+local FireIcon = Instance.new("TextLabel")
+FireIcon.Size = UDim2.new(0, 35, 0, 35)
+FireIcon.Position = UDim2.new(0, 12, 0, 10)
+FireIcon.BackgroundTransparency = 1
+FireIcon.Text = "🔥"
+FireIcon.TextSize = 28
+FireIcon.Font = Enum.Font.GothamBold
+FireIcon.TextColor3 = Color3.fromRGB(255, 180, 0)
+FireIcon.Parent = TopBar
+
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, -60, 1, 0)
+Title.Position = UDim2.new(0, 55, 0, 0)
+Title.BackgroundTransparency = 1
+Title.Text = "PEERAWAT HUB"
+Title.TextColor3 = Themes[CurrentTheme].Accent
+Title.TextSize = 18
+Title.Font = Enum.Font.GothamBold
+Title.TextXAlignment = Enum.TextXAlignment.Left
+Title.Parent = TopBar
+
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Size = UDim2.new(0, 30, 0, 30)
+CloseBtn.Position = UDim2.new(1, -40, 0.5, -15)
+CloseBtn.BackgroundColor3 = Themes[CurrentTheme].Btn
+CloseBtn.Text = "✕"
+CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseBtn.TextSize = 14
+CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.Parent = TopBar
+Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(0, 8)
+
+-- Drag Main Window
+local windowDragging, windowDragStart, windowPosStart
+TopBar.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        windowDragging = true
+        windowDragStart = input.Position
+        windowPosStart = Main.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then windowDragging = false end
+        end)
+    end
+end)
+UIS.InputChanged:Connect(function(input)
+    if windowDragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        local delta = input.Position - windowDragStart
+        Main.Position = UDim2.new(windowPosStart.X.Scale, windowPosStart.X.Offset + delta.X, windowPosStart.Y.Scale, windowPosStart.Y.Offset + delta.Y)
+    end
+end)
+
+-- Toggle Window
+ToggleBtn.MouseButton1Click:Connect(function()
+    if btnDragging then return end
+    Main.Visible = not Main.Visible
+    TweenService:Create(ToggleBtn, TweenInfo.new(0.2), {Size = Main.Visible and UDim2.new(0, 70, 0, 70) or UDim2.new(0, 60, 0, 60)}):Play()
+end)
+CloseBtn.MouseButton1Click:Connect(function()
+    Main.Visible = false
+    ToggleBtn.Size = UDim2.new(0, 60, 0, 60)
+end)
+
+-- ====================== THEME SYSTEM ======================
+local function ApplyTheme(name)
+    CurrentTheme = name
+    local t = Themes[name]
+    Main.BackgroundColor3 = t.BG
+    MainStroke.Color = t.Accent
+    TopBar.BackgroundColor3 = t.Panel
+    Title.TextColor3 = t.Accent
+    CloseBtn.BackgroundColor3 = t.Btn
+    Scroll.ScrollBarColor3 = t.Accent
+    ThemeLabel.TextColor3 = t.Text
+    for _, btn in ipairs(ColorButtons) do btn.TextColor3 = t.Text end
+end
+
+-- ====================== SCROLLING FRAME ======================
+local Scroll = Instance.new("ScrollingFrame")
+Scroll.Size = UDim2.new(1, -16, 1, -70)
+Scroll.Position = UDim2.new(0, 8, 0, 62)
+Scroll.BackgroundTransparency = 1
+Scroll.ScrollBarThickness = 6
+Scroll.ScrollBarColor3 = Themes[CurrentTheme].Accent
+Scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+Scroll.CanvasSize = UDim2.new(0, 0, 0, 10000)
+Scroll.Parent = Main
+
+local Layout = Instance.new("UIListLayout")
+Layout.Padding = UDim.new(0, 8)
+Layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+Layout.Parent = Scroll
+
+-- ====================== THEME SELECTOR ======================
+local ThemeContainer = Instance.new("Frame")
+ThemeContainer.Size = UDim2.new(1, -16, 0, 90)
+ThemeContainer.BackgroundColor3 = Themes[CurrentTheme].Panel
+ThemeContainer.Parent = Scroll
+Instance.new("UICorner", ThemeContainer).CornerRadius = UDim.new(0, 10)
+
+local ThemeLabel = Instance.new("TextLabel")
+ThemeLabel.Size = UDim2.new(1, -20, 0, 25)
+ThemeLabel.Position = UDim2.new(0, 10, 0, 8)
+ThemeLabel.BackgroundTransparency = 1
+ThemeLabel.Text = "🎨 Select Theme"
+ThemeLabel.TextColor3 = Themes[CurrentTheme].Text
+ThemeLabel.TextSize = 14
+ThemeLabel.Font = Enum.Font.GothamBold
+ThemeLabel.TextXAlignment = Enum.TextXAlignment.Left
+ThemeLabel.Parent = ThemeContainer
+
+local ColorButtons = {}
+local ThemeData = {
+    {Pos=15, Color=Color3.fromRGB(220,40,70), Name="Red", Key="Red"},
+    {Pos=100, Color=Color3.fromRGB(45,45,48), Name="Black", Key="Black"},
+    {Pos=185, Color=Color3.fromRGB(230,230,232), Name="White", Key="White"},
+    {Pos=270, Color=Color3.fromRGB(20,180,160), Name="Teal", Key="Teal"},
+}
+for _, data in ipairs(ThemeData) do
+    local Btn = Instance.new("TextButton")
+    Btn.Size = UDim2.new(0, 70, 0, 35)
+    Btn.Position = UDim2.new(0, data.Pos, 0, 45)
+    Btn.BackgroundColor3 = data.Color
+    Btn.Text = data.Name
+    Btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Btn.TextSize = 12
+    Btn.Font = Enum.Font.GothamBold
+    Btn.Parent = ThemeContainer
+    Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 8)
+    Btn.MouseButton1Click:Connect(function() ApplyTheme(data.Key) end)
+    table.insert(ColorButtons, Btn)
+end
+
+-- ====================== SWITCH BUTTON CREATOR ======================
+local State = {}
+local function AddSwitch(icon, name, callback)
+    local Container = Instance.new("Frame")
+    Container.Size = UDim2.new(1, -10, 0, 42)
+    Container.BackgroundColor3 = Themes[CurrentTheme].Panel
+    Container.Parent = Scroll
+    Instance.new("UICorner", Container).CornerRadius = UDim.new(0, 8)
+
+    local Icon = Instance.new("TextLabel")
+    Icon.Size = UDim2.new(0, 28, 0, 28)
+    Icon.Position = UDim2.new(0, 10, 0, 7)
+    Icon.BackgroundTransparency = 1
+    Icon.Text = icon
+    Icon.TextSize = 20
+    Icon.Parent = Container
+
+    local NameLabel = Instance.new("TextLabel")
+    NameLabel.Size = UDim2.new(1, -80, 1, 0)
+    NameLabel.Position = UDim2.new(0, 48, 0, 0)
+    NameLabel.BackgroundTransparency = 1
+    NameLabel.Text = name
+    NameLabel.TextColor3 = Themes[CurrentTheme].Text
+    NameLabel.TextSize = 13
+    NameLabel.Font = Enum.Font.GothamMedium
+    NameLabel.TextXAlignment = Enum.TextXAlignment.Left
+    NameLabel.Parent = Container
+
+    local Track = Instance.new("Frame")
+    Track.Size = UDim2.new(0, 44, 0, 24)
+    Track.Position = UDim2.new(1, -56, 0.5, -12)
+    Track.BackgroundColor3 = Color3.fromRGB(60, 60, 65)
+    Track.Parent = Container
+    Instance.new("UICorner", Track).CornerRadius = UDim.new(1, 0)
+
+    local Knob = Instance.new("Frame")
+    Knob.Size = UDim2.new(0, 20, 0, 20)
+    Knob.Position = UDim2.new(0, 2, 0.5, -10)
+    Knob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    Knob.Parent = Track
+    Instance.new("UICorner", Knob).CornerRadius = UDim.new(1, 0)
+
+    local Click = Instance.new("TextButton")
+    Click.Size = UDim2.new(1, 0, 1, 0)
+    Click.BackgroundTransparency = 1
+    Click.Text = ""
+    Click.Parent = Container
+
+    local Enabled = false
+    Click.MouseButton1Click:Connect(function()
+        Enabled = not Enabled
+        TweenService:Create(Track, TweenInfo.new(0.15), {BackgroundColor3 = Enabled and Themes[CurrentTheme].Accent or Color3.fromRGB(60, 60, 65)}):Play()
+        TweenService:Create(Knob, TweenInfo.new(0.15), {Position = Enabled and UDim2.new(1, -22, 0.5, -10) or UDim2.new(0, 2, 0.5, -10)}):Play()
+        callback(Enabled)
+    end)
+end
+
+-- ====================== SLIDER CREATOR ======================
+local function AddSlider(icon, name, min, max, default, callback)
+    local Container = Instance.new("Frame")
+    Container.Size = UDim2.new(1, -10, 0, 65)
+    Container.BackgroundColor3 = Themes[CurrentTheme].Panel
+    Container.Parent = Scroll
+    Instance.new("UICorner", Container).CornerRadius = UDim.new(0, 8)
+
+    local Icon = Instance.new("TextLabel")
+    Icon.Size = UDim2.new(0, 28, 0, 28)
+    Icon.Position = UDim2.new(0, 10, 0, 8)
+    Icon.BackgroundTransparency = 1
+    Icon.Text = icon
+    Icon.TextSize = 20
+    Icon.Parent = Container
+
+    local NameLabel = Instance.new("TextLabel")
+    NameLabel.Size = UDim2.new(1, -60, 0, 25)
+    NameLabel.Position = UDim2.new(0, 48, 0, 10)
+    NameLabel.BackgroundTransparency = 1
+    NameLabel.Text = name .. ": " .. default
+    NameLabel.TextColor3 = Themes[CurrentTheme].Text
+    NameLabel.TextSize = 13
+    NameLabel.Font = Enum.Font.GothamMedium
+    NameLabel.TextXAlignment = Enum.TextXAlignment.Left
+    NameLabel.Parent = Container
+
+    local SliderBG = Instance.new("Frame")
+    SliderBG.Size = UDim2.new(1, -60, 0, 8)
+    SliderBG.Position = UDim2.new(0, 48, 0, 45)
+    SliderBG.BackgroundColor3 = Color3.fromRGB(60, 60, 65)
+    SliderBG.Parent = Container
+    Instance.new("UICorner", SliderBG).CornerRadius = UDim.new(1, 0)
+
+    local SliderFill = Instance.new("Frame")
+    local percent = (default - min) / (max - min)
+    SliderFill.Size = UDim2.new(percent, 0, 1, 0)
+    SliderFill.BackgroundColor3 = Themes[CurrentTheme].Accent
+    SliderFill.Parent = SliderBG
+    Instance.new("UICorner", SliderFill).CornerRadius = UDim.new(1, 0)
+
+    local SliderKnob = Instance.new("Frame")
+    SliderKnob.Size = UDim2.new(0, 18, 0, 18)
+    SliderKnob.Position = UDim2.new(percent, -9, 0.5, -9)
+    SliderKnob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    SliderKnob.Parent = SliderBG
+    Instance.new("UICorner", SliderKnob).CornerRadius = UDim.new(1, 0)
+
+    local value = default
+    local dragging = false
+    local function Update(input)
+        local pos = math.clamp((input.Position.X - SliderBG.AbsolutePosition.X) / SliderBG.AbsoluteSize.X, 0, 1)
+        value = math.floor(min + pos * (max - min))
+        NameLabel.Text = name .. ": " .. value
+        SliderFill.Size = UDim2.new(pos, 0, 1, 0)
+        SliderKnob.Position = UDim2.new(pos, -9, 0.5, -9)
+        callback(value)
+    end
+    SliderBG.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragging = true Update(input) end end)
+    UIS.InputChanged:Connect(function(input) if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then Update(input) end end)
+    UIS.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then dragging = false end end)
+end
+
+-- ====================== PLAYER STATE & CHARACTER ======================
+local character, humanoid, rootPart
+local function UpdateCharacter()
+    character = LP.Character
+    if character then
+        humanoid = character:FindFirstChildOfClass("Humanoid")
+        rootPart = character:FindFirstChild("HumanoidRootPart")
+    end
+end
+LP.CharacterAdded:Connect(UpdateCharacter)
+UpdateCharacter()
+
+-- System States
+local States = {
+    WalkSpeed = 16, SpeedBoost = false, SpeedValue = 16,
+    InfiniteJump = false, JumpPower = 50, SuperJump = false,
+    Fly = false, FlySpeed = 50, NoClip = false, Invisible = false,
+    AntiGravity = false, GhostMode = false, NoFall = false,
+    AutoRespawn = false, GodMode = false, AutoClick = false,
+    ESP = false, Tracers = false, Nametags = false, HealthESP = false,
+    DistanceESP = false, SkeletonESP = false, ItemESP = false,
+    AutoCollect = false, AutoEat = false, AutoUpgrade = false,
+    AutoBuy = false, AutoFarm = false, AutoKill = false,
+    AutoAim = false, AimAssist = false, SilentAim = false,
+    NoRecoil = false, NoSpread = false, RapidFire = false,
+    InstantHit = false, KillAura = false, Reach = false,
+    SpeedHack = false, Teleport = false, Noclip = false,
+    FreeCam = false, Zoom = false, FOV = false,
+    AutoSpin = false, AntiStun = false, AntiSlow = false,
+    AntiKnockback = false, AutoDodge = false, AutoParry = false,
+    AutoBlock = false, PerfectBlock = false, Roll = false,
+    Dash = false, DoubleJump = false, MultiJump = false,
+    HighJump = false, LongJump = false, MoonWalk = false,
+    BunnyHop = false, AutoSprint = false, Slide = false,
+    WallClimb = false, WallRun = false, Telekinesis = false,
+    TimeStop = false, SlowMotion = false, FastMotion = false,
+    Gravity = 1, JumpHeight = 50, WalkSpeedMult = 1,
+    AutoRejoin = false, AutoReconnect = false, ServerHop = false,
+    ServerList = false, PlayerList = false, FriendESP = false,
+    EnemyESP = false, NPC_ESP = false, MobESP = false,
+    ChestESP = false, EggESP = false, CoinESP = false,
+    GemESP = false, MaterialESP = false, ResourceESP = false,
+    DropESP = false, LootESP = false, QuestESP = false,
+    NPC_Tags = false, MobTags = false, ItemTags = false,
+    DistanceLines = false, HealthBars = false, ArmorBars = false,
+    AmmoESP = false, WeaponESP = false, AbilityESP = false,
+    CooldownESP = false, StatusESP = false, EffectESP = false,
+    DamageNumbers = false, CriticalHit = false, OneShot = false,
+    InstantKill = false, Explosive = false, FireDamage = false,
+    PoisonDamage = false, IceDamage = false, LightningDamage = false,
+    AutoHeal = false, AutoRegen = false, AutoShield = false,
+    AutoMana = false, AutoStamina = false, Hungry = false,
+    Thirsty = false, Temperature = false, Oxygen = false,
+    NoHunger = false, NoThirst = false, NoTemperature = false,
+    NoOxygen = false, InfiniteAmmo = false, InfiniteClip = false,
+    InfiniteEnergy = false, InfiniteMana = false, InfiniteStamina = false,
+    UnlimitedAmmo = false, UnlimitedResources = false, UnlimitedMoney = false,
+    AutoGather = false, AutoMine = false, AutoFish = false,
+    AutoWood = false, AutoFarmMob = false, AutoFarmNPC = false,
+    AutoQuest = false, AutoComplete = false, AutoTurnIn = false,
+    AutoDaily = false, AutoWeekly = false, AutoEvent = false,
+    AutoGift = false, AutoClaim = false, AutoReward = false,
+    SpinWheel = false, LuckySpin = false, Gacha = false,
+    Duplicate = false, ItemDupe = false, MoneyDupe = false,
+    FastAttack = false, FastCast = false, FastShoot = false,
+    FastReload = false, InstantReload = false, NoReload = false,
+    Charge = false, InstantCharge = false, FullCharge = false,
+    MeleeRange = false, BlockRange = false, ThrowRange = false,
+    ProjectileSpeed = false, ProjectileCount = false, MultiShot = false,
+    SplitShot = false, BounceShot = false, PiercingShot = false,
+    ExplosiveShot = false, FireShot = false, IceShot = false,
+    LightningShot = false, PoisonShot = false,
+}
+
+-- ====================== ADD ALL 150+ FEATURES ======================
+-- Movement
+AddSwitch("🏃", "Walk Speed Boost", function(v) States.SpeedBoost = v end)
+AddSlider("⚡", "Walk Speed Multiplier", 1, 200, 16, function(v) States.WalkSpeed = v end)
+AddSwitch("🦘", "Infinite Jump", function(v) States.InfiniteJump = v end)
+AddSwitch("⬆️", "Super Jump", function(v) States.SuperJump = v end)
+AddSlider("📈", "Jump Power", 1, 1000, 50, function(v) States.JumpPower = v end)
+AddSwitch("🔁", "Double Jump", function(v) States.DoubleJump = v end)
+AddSwitch("🔂", "Multi Jump", function(v) States.MultiJump = v end)
+AddSwitch("📏", "Long Jump", function(v) States.LongJump = v end)
+AddSwitch("🌙", "Moon Walk", function(v) States.MoonWalk = v end)
+AddSwitch("🐇", "Bunny Hop", function(v) States.BunnyHop = v end)
+AddSwitch("🏁", "Auto Sprint", function(v) States.AutoSprint = v end)
+AddSwitch("🛝", "Slide", function(v) States.Slide = v end)
+AddSwitch("🏔️", "High Jump", function(v) States.HighJump = v end)
+AddSwitch("💨", "Dash", function(v) States.Dash = v end)
+AddSwitch("🧱", "Wall Climb", function(v) States.WallClimb = v end)
+AddSwitch("🏃‍♂️", "Wall Run", function(v) States.WallRun = v end)
+
+-- Flight & Physics
+AddSwitch("✈️", "Fly Mode", function(v) States.Fly = v end)
+AddSlider("🚀", "Fly Speed", 1, 200, 50, function(v) States.FlySpeed = v end)
+AddSwitch("🧱", "No Clip / Pass Through Walls", function(v) States.NoClip = v end)
+AddSwitch("🎥", "Free Camera", function(v) Stat
